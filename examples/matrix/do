@@ -1,0 +1,10 @@
+make cleanall
+make -C ~/LinAPI/src cleanall
+
+#make -C ~/LinAPI/src all 
+make -C ~/LinAPI/src/scalapack static
+make -C ~/LinAPI/src/lapack static
+make scast
+
+. run scast $1
+

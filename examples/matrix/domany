@@ -1,0 +1,4 @@
+times=10;
+for ((c=0; c<times; ++c)); do
+	. run scast 
+done

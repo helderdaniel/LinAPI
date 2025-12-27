@@ -1,0 +1,41 @@
+#include BLACS+MPI+LAPACK+SCALAPACK Makefile definitions
+include /shared/opt/scalapack-1.8.0/SLmake.inc
+
+#Executables
+SRC      = linApiEx01.cpp
+EXEscast = linApiEx01Scalapackst
+EXEscash = linApiEx01Scalapacksh
+ALLEXE   = $(EXEscast) $(EXEscash)
+
+#Enable C++ compiler wrapped for mpich2 should not be required
+#since $(RLIBS) or $(PBLIBS) already include MPICH2 LIB. g++ should be enough
+#however if mpi include dirs required, mpicxx must be used
+#CC       = /shared/opt/mpich2/bin/mpicxx
+CC       = g++
+
+#Library location and type
+LIBTYPE = scalapack
+LIBIDMACRO = _SCALAPACK_
+LINAPI   = /users/hdaniel/LinAPI/src
+LinAPIst = $(LINAPI)/$(LIBTYPE)/liblinapi.a
+LinAPIsh = $(LINAPI)/$(LIBTYPE)/liblinapi.so.1
+
+CCFLAGS  += -Wall -D $(LIBIDMACRO) -I$(LINAPI) -I$(LINAPI)/$(LIBTYPE) -lg2c
+#This libs should not be required:
+#-lstdc++
+
+all: static shared
+
+static:
+	@$(CC) -M $(SRC) $(CCFLAGS)
+	$(CC) -static-libgcc -o $(EXEscast) $(CCFLAGS) -DBTCINTFACE $(BLACSDEFS) $(SRC) $(LinAPIst) $(RLIBS)
+shared:
+	@$(CC) -M $(SRC) $(CCFLAGS)
+	#-shared-libgcc
+	$(CC) -shared-libgcc -o $(EXEscash) $(CCFLAGS) -DBTCINTFACE $(BLACSDEFS) $(SRC) $(LinAPIsh) $(RLIBS)
+clean:
+	@-rm *.o *~
+	
+cleanall:
+	$(MAKE) clean
+	@-rm $(ALLEXE)

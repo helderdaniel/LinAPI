@@ -1,0 +1,43 @@
+#Executes Blacs class for LinAPI demo
+#
+#$1 choose demo to run
+#$2 for number of processes to use (default 4)
+#
+# Second ($2) argument indicates how many processes to create.
+# Should be >= 1, default is 4
+# Program may not use all processes on a square grid, only on a linear grid.
+# For 5 processes a 2x2 square grid will be created, leaving one process out
+# Square grids have fixed forms 1x1 2x1 3x1 2x2 2x3 2x4 3x3 ...
+
+numproc=4
+
+#convert arg $2 to numeric. Usefull is $2 is null which gives an error in
+#next if condition (null -gt 0). Converting if $2 == null it will become 0
+arg2=$(($2+0))
+
+if [ $arg2 -gt 0 ]; then
+  numproc=$2
+fi
+
+case $1 in
+  lapst)
+      ./blacstestLapackst
+  ;;  
+  lapsh)
+      export LD_LIBRARY_PATH=~/LinAPI/src/lapack
+      ./blacstestLapacksh
+  
+  ;;  
+  scast)
+      /shared/opt/mpich2/bin/mpiexec -np $numproc ./blacstestScalapackst
+  ;;  
+  scash)
+      export LD_LIBRARY_PATH=~/LinAPI/src/scalapack
+      /shared/opt/mpich2/bin/mpiexec -np $numproc ./blacstestScalapacksh
+  
+  ;;  
+  *)
+    echo "Uso run <lapst|lapsh|scast|scash> [numproc if scalapack (default==4)]"
+
+esac
+

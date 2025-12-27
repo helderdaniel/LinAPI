@@ -1,0 +1,107 @@
+#-5
+
+Test to pass parameters for reference rather than pointer to Fortran functions
+as in:
+
+http://icl.cs.utk.edu/lapack-forum/viewtopic.php?f=2&t=235&start=0
+
+extern "C" void dgeqrf_ (const int &m, const int &n, double da[], const int &lda, double dtau[], double dwork[], const int &ldwork, int &info)
+
+#-4 Fix Singleton pattern in LinApi as describet in comment in LinApi.cpp
+
+#-3 Bug in distributed exception handling crashes system (Scalapack only)
+========================================================================
+It must handle:
+	Only one proc throws exception
+	More than one or all procs throws exceptions
+	No execption thrown (normal termination)
+
+without glibc memory error
+
+this can be seen easly with:   . run scast 7 (even if no exception throw) 
+
+To read output before error on termination, client program can have a 
+getchar() before end of program.
+
+Problem could be on MPI comm functions, or on LinApi use of functions
+
+
+#-2 Terminar implementao Scalapack (e parte do Lapack)
+desde o teste a daxpy no exemplo LinApiEx01
+==================================================
+
+A implementao dos operadores + += * *= n forma feitas para todos os tipos
+SINGLE, DOUBLE, ...
+pode-se usar a mesma tecnica usada no LinSolver gesv, que evita duplicao
+de todo o codigo das funcoes, usando uma funcao generica wrapper para gemv_
+e gemm_
+
+#-1 When linking lapack examples with shared linapi
+===================================================
+
+it can find reference to methods.
+However nm liblinapi.so.1 reports them there
+
+#0 Support for (Triangular, sym, herm, ...) Matrices
+===============================================
+(Must group all Blacs P/BALS - Sca/Lapack function according to MAtrix type
+ on a paper sheet to identify classes nedded)
+
+Class LinMatrixTR for triangular (or tridiagonal??) matricies
+(and classes for sym, herm, too?)
+Use speclialized P/BLAS functions for calc
+
+The only diff between this classes and LinMatrix is the P/Blas Sca/Lapack
+functions called
+
+(Scalapack)
+collect and distribute (for triangular matrices) must be overloaded 
+to use specallized functions (from scalapack tools for trapezoidal matrices)
+
+Solver class must also have a function for this kind of matrices?
+
+
+#1 Compare operator == on base class Operator2D
+===============================================
+
+write how to make == operator on distributed env:
+	DO NOT check locally all fields
+	we are not tring to id if its same object (only same value)
+	DO check locally all dynamic arrays
+	if ok value == true
+	else value = false
+	send all values to every other processors
+	check if any false
+	else globaloperator == is true
+
+this is not quite the same used for exception handling on LinApi
+where all other processes send a signa to the root processor
+In this case all processor must send a boolean value (or an int) to all
+others
+
+Maybe there is an MPI collective comm function to do this
+or even blacs broadcast (MPI should be better)
+
+
+#2 type conversion, between Sca/Lapack data types
+=================================================
+
+   DOUBLE, SINGLE, COMPLEX, ....
+
+	this support is not yet available.
+	One way to do implement that support can be defining specialized
+	constructors for type convertion like:
+
+	LinMatrix<DOUBLE>(SINGLE Op)
+
+	which creates a new matrix LinMatrix<Double> object
+	and copies Op._data to this._data
+
+	Then C++ type convertion constructor can be called automatically
+	in operations like:
+
+	LinMatrix<DOUBLE> A
+	LinMatrix<SINGLE> B
+
+	LinMatrix<DOUBLE> C = A + B
+

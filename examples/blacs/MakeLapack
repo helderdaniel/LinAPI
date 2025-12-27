@@ -1,0 +1,66 @@
+#==== ATLAS and LAPACK Libs =====
+#include ATLAS BLAS Makefile base definitions
+#check if it is really needed
+#include /shared/opt/atlas-3.8.2/Make.inc
+
+#LIB dirs
+ATLASdir = /shared/opt/atlas-3.8.2
+LAPACKdir = /shared/opt/lapack-3.1.1
+
+#ATLAS original LAPACK lib (do not include ATLAS BLAS optimized functions)
+#To compile with this accessing F77 intreface LAPACKLLIB+BLASLIB must be linked
+#LAPACKLIB = -llapack
+#or
+#LAPACKLIB = $(LAPACKdir)/lapack_LINUX.a
+
+#ATLAS optimized BLAS + LAPACK interfaces in C and F77
+#CLAPACKATLLIB is full ATLAS POWERED LAPACK F77 LIB + C ATLAS interface to LAPA
+#So for C77 or C (limited) interfaces CLAPACKATLLIB+BLASLIB+CBLASLIB
+CLAPACKATLLIB = $(ATLASdir)/lib/liblapack.a
+BLASLIB = -L$(ATLASdir)/lib/ -lf77blas -latlas
+CBLASLIB = -L$(ATLASdir)/lib/ -lcblas -latlas
+#To use threadded lybraries for SMP: -lptf77blas or -lptcblas
+
+LAPLIBS=$(CBLASLIB) $(CLAPACKATLLIB) $(BLASLIB) $(LAPACKLIB)
+
+#==== end ATLAS and LAPACK Libs =====
+
+
+#Executables
+SRC      = blacstest.cpp
+EXElapst = blacstestLapackst
+EXElapsh = blacstestLapacksh
+ALLEXE   = $(EXElapst) $(EXElapsh) 
+
+CC       = g++
+
+#Library location and type
+LIBTYPE = lapack
+LIBIDMACRO = _LAPACK_
+LINAPI   = /users/hdaniel/LinAPI/src
+LinAPIst = $(LINAPI)/$(LIBTYPE)/liblinapi.a
+LinAPIsh = $(LINAPI)/$(LIBTYPE)/liblinapi.so.1
+
+CCFLAGS  += -Wall -D $(LIBIDMACRO) -I$(LINAPI) -I$(LINAPI)/$(LIBTYPE)
+
+
+
+all: static shared
+
+static:
+	@$(CC) -M $(SRC) $(CCFLAGS)
+	$(CC) -static-libgcc -o $(EXElapst) $(CCFLAGS) $(SRC) $(LinAPIst) $(LAPLIBS)
+#This libs should not be required:
+#-lstdc++ -lg2c -lpthread
+
+shared:
+	@$(CC) -M $(SRC) $(CCFLAGS)
+	#-shared -shared-libgcc 
+	$(CC) -o $(EXElapsh) $(CCFLAGS) $(SRC) $(LinAPish) $(LAPLIBS)
+
+clean:
+	@-rm *.o *~
+
+cleanall:
+	$(MAKE) clean
+	@-rm $(ALLEXE)
